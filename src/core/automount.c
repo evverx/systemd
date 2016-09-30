@@ -600,6 +600,7 @@ static void automount_enter_waiting(Automount *a) {
          * Unless we close the ioctl fd here, for some weird reason
          * the direct mount will not receive events from the
          * kernel. */
+        ioctl_fd = safe_close(ioctl_fd);
 
         r = sd_event_add_io(UNIT(a)->manager->event, &a->pipe_event_source, p[0], EPOLLIN, automount_dispatch_io, a);
         if (r < 0)
