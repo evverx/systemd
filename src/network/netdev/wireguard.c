@@ -613,8 +613,7 @@ int config_parse_wireguard_endpoint(const char *unit,
         endpoint->host = TAKE_PTR(host);
         endpoint->port = TAKE_PTR(port);
         endpoint->netdev = netdev_ref(data);
-        LIST_PREPEND(endpoints, w->unresolved_endpoints, endpoint);
-        endpoint = NULL;
+        LIST_PREPEND(endpoints, w->unresolved_endpoints, TAKE_PTR(endpoint));
 
         return 0;
 }
