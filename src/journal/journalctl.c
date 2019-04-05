@@ -52,6 +52,7 @@
 #include "logs-show.h"
 #include "memory-util.h"
 #include "mkdir.h"
+#include "mountpoint-util.h"
 #include "nulstr-util.h"
 #include "pager.h"
 #include "parse-util.h"
@@ -168,6 +169,7 @@ static enum {
         ACTION_UPDATE_CATALOG,
         ACTION_LIST_BOOTS,
         ACTION_FLUSH,
+        ACTION_RELINQUISH,
         ACTION_SYNC,
         ACTION_ROTATE,
         ACTION_VACUUM,
@@ -369,6 +371,8 @@ static int help(void) {
                "     --vacuum-time=TIME      Remove journal files older than specified time\n"
                "     --verify                Verify journal file consistency\n"
                "     --sync                  Synchronize unwritten journal messages to disk\n"
+               "     --relinquish            Stop logging to disk, log to temporary file system\n"
+               "     --smart-relinquish      Similar, but NOP if log directory is on root mount\n"
                "     --flush                 Flush all journal data from /run into /var\n"
                "     --rotate                Request immediate rotation of the journal files\n"
                "     --header                Show journal header information\n"
@@ -416,6 +420,8 @@ static int parse_argv(int argc, char *argv[]) {
                 ARG_UTC,
                 ARG_SYNC,
                 ARG_FLUSH,
+                ARG_RELINQUISH,
+                ARG_SMART_RELINQUISH,
                 ARG_ROTATE,
                 ARG_VACUUM_SIZE,
                 ARG_VACUUM_FILES,
@@ -477,6 +483,8 @@ static int parse_argv(int argc, char *argv[]) {
                 { "machine",        required_argument, NULL, 'M'                },
                 { "utc",            no_argument,       NULL, ARG_UTC            },
                 { "flush",          no_argument,       NULL, ARG_FLUSH          },
+                { "relinquish",     no_argument,       NULL, ARG_RELINQUISH     },
+                { "smart-relinquish", no_argument,     NULL, ARG_SMART_RELINQUISH },
                 { "sync",           no_argument,       NULL, ARG_SYNC           },
                 { "rotate",         no_argument,       NULL, ARG_ROTATE         },
                 { "vacuum-size",    required_argument, NULL, ARG_VACUUM_SIZE    },
@@ -913,6 +921,35 @@ static int parse_argv(int argc, char *argv[]) {
 
                 case ARG_FLUSH:
                         arg_action = ACTION_FLUSH;
+                        break;
+
+                case ARG_SMART_RELINQUISH: {
+                        int root_mnt_id, log_mnt_id;
+
+                        /* Try to be smart about relinquishing access to /var/log/journal/ during shutdown:
+                         * if it's on the same mount as the root file system there's no point in
+                         * relinquishing access and we can leave journald write to it until the very last
+                         * moment. */
+
+                        r = path_get_mnt_id("/", &root_mnt_id);
+                        if (r < 0)
+                                log_debug_errno(r, "Failed to get root mount ID, ignoring: %m");
+                        else {
+                                r = path_get_mnt_id("/var/log/journal/", &log_mnt_id);
+                                if (r < 0)
+                                        log_debug_errno(r, "Failed to get journal directory mount ID, ignoring: %m");
+                                else if (root_mnt_id == log_mnt_id) {
+                                        log_debug("/var/log/journal/ is on root file system, not relinquishing access to /var.");
+                                        return 0;
+                                } else
+                                        log_debug("/var/log/journal/ is not on the root file system, relinquishing access to it.");
+                        }
+
+                        _fallthrough_;
+                }
+
+                case ARG_RELINQUISH:
+                        arg_action = ACTION_RELINQUISH;
                         break;
 
                 case ARG_ROTATE:
@@ -1925,6 +1962,10 @@ static int flush_to_var(void) {
         return simple_varlink_call("--flush", "io.systemd.Journal.FlushToVar");
 }
 
+static int relinquish_var(void) {
+        return simple_varlink_call("--relinquish", "io.systemd.Journal.RelinquishVar");
+}
+
 static int rotate(void) {
         return simple_varlink_call("--rotate", "io.systemd.Journal.Rotate");
 }
@@ -2037,6 +2078,10 @@ int main(int argc, char *argv[]) {
 
         case ACTION_FLUSH:
                 r = flush_to_var();
+                goto finish;
+
+        case ACTION_RELINQUISH:
+                r = relinquish_var();
                 goto finish;
 
         case ACTION_SYNC:
