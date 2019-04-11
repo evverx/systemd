@@ -591,6 +591,10 @@ tests += [
           libmount,
           libblkid]],
 
+        [['src/test/test-varlink.c'],
+         [],
+         [threads]],
+
         [['src/test/test-cgroup-util.c'],
          [],
          []],
