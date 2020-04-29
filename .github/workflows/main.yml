@@ -9,11 +9,13 @@ jobs:
    runs-on: ubuntu-latest
    steps:
    - name: Build Fuzzers
+     id: build
      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
      with:
        oss-fuzz-project-name: 'systemd'
        dry-run: false
    - name: Run Fuzzers
+     id: run
      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
      with:
        oss-fuzz-project-name: 'systemd'
@@ -21,7 +23,7 @@ jobs:
        dry-run: false
    - name: Upload Crash
      uses: actions/upload-artifact@v1
-     if: failure()
+     if: failure() && steps.build.outcome == 'success' && steps.run.outcome != 'success'
      with:
        name: artifacts
        path: ./out/artifacts
