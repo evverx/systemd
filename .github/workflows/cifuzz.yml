@@ -18,7 +18,6 @@ on:
 jobs:
  Fuzzing:
    runs-on: ubuntu-latest
-   if: github.repository == 'systemd/systemd'
    strategy:
      fail-fast: false
      matrix:
