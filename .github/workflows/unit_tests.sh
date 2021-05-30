@@ -103,7 +103,7 @@ for phase in "${PHASES[@]}"; do
             # here to make the builds stable for the time being.
             (set +x; while :; do echo -ne "\n[WATCHDOG] $(date)\n"; sleep 30; done) &
             meson test --timeout-multiplier=3 -C build --print-errorlogs
-	    ;;
+            ;;
         RUN_CLANG_RUST_ASAN)
             export CC=clang
             export CXX=clang++
@@ -125,6 +125,29 @@ EOF
             ninja -C build -v
             (set +x; while :; do echo -ne "\n[WATCHDOG] $(date)\n"; sleep 30; done) &
             meson test --timeout-multiplier=3 -C build --print-errorlogs
+
+            cargo init --lib rust-stuff
+            cp src/basic/string-util.rs rust-stuff/src/lib.rs
+            cd rust-stuff
+            cargo fmt --all -- --check
+            cargo clippy --all-targets --all-features -- -D warnings
+            cargo test
+
+            rustup component add rust-src
+            cargo clean
+            RUSTFLAGS="-Z sanitizer=address" RUSTDOCFLAGS="-Z sanitizer=address" cargo test -Zbuild-std --target x86_64-unknown-linux-gnu
+            cargo clean
+            RUSTFLAGS="-Z sanitizer=memory" RUSTDOCFLAGS="-Z sanitizer=memory" cargo test -Zbuild-std --target x86_64-unknown-linux-gnu
+
+            # https://github.com/rust-lang/miri#running-miri-on-ci
+            MIRI_NIGHTLY=nightly-$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/miri)
+            echo "Installing latest nightly with Miri: $MIRI_NIGHTLY"
+            rustup set profile minimal
+            rustup default "$MIRI_NIGHTLY"
+            rustup component add miri
+            cargo clean
+            RUST_BACKTRACE=1 MIRIFLAGS="-Zmiri-disable-isolation" cargo miri test
+
             ;;
         CLEANUP)
             info "Cleanup phase"

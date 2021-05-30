@@ -49,3 +49,73 @@ pub unsafe extern "C" fn string_extract_line(
 
     0
 }
+
+// The tests are borrowed from https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=ca729c1478cd21893ae6f8f5ebde4ac2
+// which in turn was mentioned in https://github.com/systemd/systemd/pull/19598#discussion_r632891919
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // This test panics. It should probably be replaced with something else
+    #[test]
+    #[ignore]
+    fn empty_string() {
+        let s = b"\0";
+        let mut ret: *mut c_char = ptr::null_mut();
+
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 0, &mut ret) };
+        assert_eq!(r, 0);
+        assert!(ret.is_null());
+
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 1, &mut ret) };
+        assert_eq!(r, 0);
+        assert!(!ret.is_null());
+        let ret = unsafe { CString::from_raw(ret) };
+        assert_eq!(ret.to_str(), Ok(""));
+    }
+
+    #[test]
+    fn multiple_line() {
+        let s = b"\
+test
+multiple
+lines\0";
+
+        let mut ret: *mut c_char = ptr::null_mut();
+
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 1, &mut ret) };
+
+        assert_eq!(r, 1);
+        assert!(!ret.is_null());
+        let ret = unsafe { CString::from_raw(ret) };
+        assert_eq!(ret.to_str(), Ok("multiple"));
+
+        let mut ret: *mut c_char = ptr::null_mut();
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 2, &mut ret) };
+
+        assert_eq!(r, 0);
+        assert!(!ret.is_null());
+        let ret = unsafe { CString::from_raw(ret) };
+        assert_eq!(ret.to_str(), Ok("lines"));
+    }
+
+    #[test]
+    fn whole_string() {
+        let s = b"foo\0";
+        let mut ret: *mut c_char = ptr::null_mut();
+
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 0, &mut ret) };
+
+        assert_eq!(r, 0);
+        assert!(ret.is_null());
+
+        let s = b"foo\n\0";
+
+        let r = unsafe { string_extract_line(s.as_ptr() as *const c_char, 0, &mut ret) };
+
+        assert_eq!(r, 0);
+        assert!(!ret.is_null());
+        let ret = unsafe { CString::from_raw(ret) };
+        assert_eq!(ret.to_str(), Ok("foo"));
+    }
+}
