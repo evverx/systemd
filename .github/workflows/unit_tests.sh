@@ -121,10 +121,10 @@ EOF
             cat rustc
             chmod +x rustc
 
-            RUSTC=$(pwd)/rustc meson --werror -Drust_args="--deny warnings -Zsanitizer=address" -Db_lundef=false -Dfuzz-tests=true -Dtests=unsafe -Db_sanitize=address -Dbuild-rust=true build
-            ninja -C build -v
-            (set +x; while :; do echo -ne "\n[WATCHDOG] $(date)\n"; sleep 30; done) &
-            meson test --timeout-multiplier=3 -C build --print-errorlogs
+            #RUSTC=$(pwd)/rustc meson --werror -Drust_args="--deny warnings -Zsanitizer=address" -Db_lundef=false -Dfuzz-tests=true -Dtests=unsafe -Db_sanitize=address -Dbuild-rust=true build
+            #ninja -C build -v
+            #(set +x; while :; do echo -ne "\n[WATCHDOG] $(date)\n"; sleep 30; done) &
+            #meson test --timeout-multiplier=3 -C build --print-errorlogs
 
             cargo init --lib rust-stuff
             cp src/basic/string-util.rs rust-stuff/src/lib.rs
