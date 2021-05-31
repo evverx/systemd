@@ -522,7 +522,7 @@ char* strshorten(char *s, size_t l) {
 }
 
 char *strreplace(const char *text, const char *old_string, const char *new_string) {
-        size_t l, old_len, new_len, allocated = 0;
+        size_t l, old_len, new_len;
         char *t, *ret = NULL;
         const char *f;
 
@@ -536,7 +536,7 @@ char *strreplace(const char *text, const char *old_string, const char *new_strin
         new_len = strlen(new_string);
 
         l = strlen(text);
-        if (!GREEDY_REALLOC(ret, allocated, l+1))
+        if (!GREEDY_REALLOC(ret, l+1))
                 return NULL;
 
         f = text;
@@ -552,7 +552,7 @@ char *strreplace(const char *text, const char *old_string, const char *new_strin
                 d = t - ret;
                 nl = l - old_len + new_len;
 
-                if (!GREEDY_REALLOC(ret, allocated, nl + 1))
+                if (!GREEDY_REALLOC(ret, nl + 1))
                         return mfree(ret);
 
                 l = nl;
@@ -805,7 +805,7 @@ int strextendf(char **x, const char *format, ...) {
         /* Let's try to use the allocated buffer, if there's room at the end still. Otherwise let's extend by 64 chars. */
         if (*x) {
                 m = strlen(*x);
-                a = malloc_usable_size(*x);
+                a = MALLOC_SIZEOF_SAFE(*x);
                 assert(a >= m + 1);
         } else
                 m = a = 0;
@@ -821,7 +821,7 @@ int strextendf(char **x, const char *format, ...) {
                         return -ENOMEM;
 
                 *x = n;
-                a = malloc_usable_size(*x);
+                a = MALLOC_SIZEOF_SAFE(*x);
         }
 
         /* Now, let's try to format the string into it */
@@ -1054,6 +1054,7 @@ int string_truncate_lines(const char *s, size_t n_lines, char **ret) {
         return truncation_applied;
 }
 
+#ifdef BUILD_LEGACY_HELPERS
 int string_extract_line(const char *s, size_t i, char **ret) {
         const char *p = s;
         size_t c = 0;
@@ -1114,6 +1115,7 @@ int string_extract_line(const char *s, size_t i, char **ret) {
                 c++;
         }
 }
+#endif
 
 int string_contains_word_strv(const char *string, const char *separators, char **words, const char **ret_word) {
         /* In the default mode with no separators specified, we split on whitespace and

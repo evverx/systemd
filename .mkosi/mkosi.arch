@@ -43,6 +43,7 @@ BuildPackages=
         python-jinja
         qrencode
         rsync
+        rust
         xz
         zstd
 
@@ -52,4 +53,3 @@ Packages=
         nano
         qrencode
         strace
-        vi

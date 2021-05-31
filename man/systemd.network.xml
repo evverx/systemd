@@ -51,9 +51,10 @@
 
     <para>Along with the network file <filename>foo.network</filename>, a "drop-in" directory
     <filename>foo.network.d/</filename> may exist. All files with the suffix
-    <literal>.conf</literal> from this directory will be parsed after the file itself is
-    parsed. This is useful to alter or add configuration settings, without having to modify the main
-    configuration file. Each drop-in file must have appropriate section headers.</para>
+    <literal>.conf</literal> from this directory will be merged in the alphanumeric order and parsed
+    after the main file itself has been parsed. This is useful to alter or add configuration settings,
+    without having to modify the main configuration file. Each drop-in file must have appropriate
+    section headers.</para>
 
     <para>In addition to <filename>/etc/systemd/network</filename>, drop-in <literal>.d</literal>
     directories can be placed in <filename>/usr/lib/systemd/network</filename> or
@@ -215,9 +216,9 @@
           <para>Takes a boolean or a minimum operational state and an optional maximum operational state.
           Please see <citerefentry><refentrytitle>networkctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
           for possible operational states. When <literal>yes</literal>, the network is deemed required when
-          determining whether the system is online when running
-          <command>systemd-networkd-wait-online</command>. When <literal>no</literal>, the network is ignored
-          when checking for online state. When a minimum operational state and an optional maximum operational
+          determining whether the system is online (including when running
+          <command>systemd-networkd-wait-online</command>). When <literal>no</literal>, the network is ignored
+          when determining the online state. When a minimum operational state and an optional maximum operational
           state are set, <literal>yes</literal> is implied, and this controls the minimum and maximum
           operational state required for the network interface to be considered online.
           Defaults to <literal>yes</literal>.</para>
@@ -232,13 +233,13 @@
       <varlistentry>
         <term><varname>RequiredFamilyForOnline=</varname></term>
         <listitem>
-          <para>Specifies an address family. When specified,
-          <command>systemd-networkd-wait-online</command> waits for at least one routable or link-local
-          IP address in the family should be configured on the link. Takes one of
-          <literal>ipv4</literal>, <literal>ipv6</literal>, <literal>both</literal>, or
-          <literal>any</literal>. Defaults to <literal>any</literal>. Note that this will be used only
-          when <varname>RequiredForOnline=</varname> is true, or its minimum operational state is
-          <literal>degraded</literal> or above. Otherwise, it will be ignored.</para>
+          <para>Takes an address family. When specified, an IP address in the given family is deemed required
+          when determining whether the link is online (including when running
+          <command>systemd-networkd-wait-online</command>). Takes one of <literal>ipv4</literal>,
+          <literal>ipv6</literal>, <literal>both</literal>, or <literal>any</literal>. Defaults to
+          <literal>any</literal>. Note that this option has no effect if
+          <literal>RequiredForOnline=no</literal>, or if <literal>RequiredForOnline=</literal> specifies a
+          minimum operational state below <literal>degraded</literal>.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -2854,6 +2855,13 @@ IPv6Token=prefixstable:2002:da8:1::</programlisting></para>
             means the address is associated with master devices fdb. <literal>router</literal> means
             the destination address is associated with a router. Note that it's valid if the referenced
             device is a VXLAN type device and has route shortcircuit enabled. Defaults to <literal>self</literal>.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><varname>OutgoingInterface=</varname></term>
+          <listitem>
+            <para>Specifies the name or index of the outgoing interface for the VXLAN device driver to
+            reach the remote VXLAN tunnel endpoint. Defaults to unset.</para>
           </listitem>
         </varlistentry>
       </variablelist>

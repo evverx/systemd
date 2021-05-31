@@ -903,13 +903,12 @@ static int route_set_netlink_message(const Route *route, sd_netlink_message *req
         return 0;
 }
 
-int link_route_remove_handler_internal(sd_netlink *rtnl, sd_netlink_message *m, Link *link, const char *error_msg) {
+static int link_route_remove_handler(sd_netlink *rtnl, sd_netlink_message *m, Link *link) {
         int r;
 
         assert(m);
         assert(link);
         assert(link->route_remove_messages > 0);
-        assert(error_msg);
 
         link->route_remove_messages--;
 
@@ -918,13 +917,9 @@ int link_route_remove_handler_internal(sd_netlink *rtnl, sd_netlink_message *m, 
 
         r = sd_netlink_message_get_errno(m);
         if (r < 0 && r != -ESRCH)
-                log_link_message_warning_errno(link, m, r, error_msg);
+                log_link_message_warning_errno(link, m, r, "Could not drop route, ignoring");
 
         return 1;
-}
-
-static int link_route_remove_handler(sd_netlink *rtnl, sd_netlink_message *m, Link *link) {
-        return link_route_remove_handler_internal(rtnl, m, link, "Could not drop route, ignoring");
 }
 
 static int manager_route_remove_handler(sd_netlink *rtnl, sd_netlink_message *m, Manager *manager) {
@@ -943,12 +938,7 @@ static int manager_route_remove_handler(sd_netlink *rtnl, sd_netlink_message *m,
         return 1;
 }
 
-int route_remove(
-                const Route *route,
-                Manager *manager,
-                Link *link,
-                link_netlink_message_handler_t callback) {
-
+int route_remove(const Route *route, Manager *manager, Link *link) {
         _cleanup_(sd_netlink_message_unrefp) sd_netlink_message *req = NULL;
         unsigned char type;
         int r;
@@ -988,7 +978,7 @@ int route_remove(
 
         if (link) {
                 r = netlink_call_async(manager->rtnl, NULL, req,
-                                       callback ?: link_route_remove_handler,
+                                       link_route_remove_handler,
                                        link_netlink_destroy_callback, link);
                 if (r < 0)
                         return log_link_error_errno(link, r, "Could not send rtnetlink message: %m");
@@ -1062,7 +1052,7 @@ static int manager_drop_routes_internal(Manager *manager, bool foreign, const Li
 
                 /* The existing links do not have the route. Let's drop this now. It may be
                  * re-configured later. */
-                k = route_remove(route, manager, NULL, NULL);
+                k = route_remove(route, manager, NULL);
                 if (k < 0 && r >= 0)
                         r = k;
 
@@ -1112,7 +1102,7 @@ int link_drop_foreign_routes(Link *link) {
                 if (link_has_static_route(link, route))
                         k = route_add(NULL, link, route, NULL, NULL, NULL);
                 else
-                        k = route_remove(route, NULL, link, NULL);
+                        k = route_remove(route, NULL, link);
                 if (k < 0 && r >= 0)
                         r = k;
         }
@@ -1135,7 +1125,7 @@ int link_drop_routes(Link *link) {
                 if (route->protocol == RTPROT_KERNEL)
                         continue;
 
-                k = route_remove(route, NULL, link, NULL);
+                k = route_remove(route, NULL, link);
                 if (k < 0 && r >= 0)
                         r = k;
         }
@@ -1153,7 +1143,7 @@ static int route_expire_handler(sd_event_source *s, uint64_t usec, void *userdat
 
         assert(route);
 
-        r = route_remove(route, route->manager, route->link, NULL);
+        r = route_remove(route, route->manager, route->link);
         if (r < 0) {
                 log_link_warning_errno(route->link, r, "Could not remove route: %m");
                 route_free(route);
@@ -1575,25 +1565,23 @@ static int route_is_ready_to_configure(const Route *route, Link *link) {
 
         ORDERED_SET_FOREACH(m, route->multipath_routes) {
                 union in_addr_union a = m->gateway.address;
+                Link *l = NULL;
 
                 if (route->gateway_onlink <= 0 &&
                     !manager_address_is_reachable(link->manager, m->gateway.family, &a))
                         return false;
 
                 if (m->ifname) {
-                        Link *l;
-
-                        r = resolve_interface(&link->manager->rtnl, m->ifname);
-                        if (r < 0)
+                        if (link_get_by_name(link->manager, m->ifname, &l) < 0)
                                 return false;
-                        m->ifindex = r;
 
+                        m->ifindex = l->ifindex;
+                } else if (m->ifindex > 0) {
                         if (link_get(link->manager, m->ifindex, &l) < 0)
                                 return false;
-
-                        if (!link_is_ready_to_configure(l, true))
-                                return false;
                 }
+                if (l && !link_is_ready_to_configure(l, true))
+                        return false;
         }
 
         return true;
@@ -2755,9 +2743,20 @@ int config_parse_multipath_route(
         if (dev) {
                 *dev++ = '\0';
 
-                m->ifname = strdup(dev);
-                if (!m->ifname)
-                        return log_oom();
+                r = parse_ifindex(dev);
+                if (r > 0)
+                        m->ifindex = r;
+                else {
+                        if (!ifname_valid_full(dev, IFNAME_VALID_ALTERNATIVE)) {
+                                log_syntax(unit, LOG_WARNING, filename, line, 0,
+                                           "Invalid interface name '%s' in %s=, ignoring: %s", dev, lvalue, rvalue);
+                                return 0;
+                        }
+
+                        m->ifname = strdup(dev);
+                        if (!m->ifname)
+                                return log_oom();
+                }
         }
 
         r = in_addr_from_string_auto(word, &family, &a);
