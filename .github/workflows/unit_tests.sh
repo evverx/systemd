@@ -38,6 +38,7 @@ for phase in "${PHASES[@]}"; do
             apt-get -y update
             apt-get -y build-dep systemd
             apt-get -y install "${ADDITIONAL_DEPS[@]}"
+	    curl -v https://coveralls.io
             ;;
         RUN|RUN_GCC|RUN_CLANG)
             if [[ "$phase" = "RUN_CLANG" ]]; then
@@ -51,7 +52,9 @@ for phase in "${PHASES[@]}"; do
             fi
             meson --werror -Dtests=unsafe -Dslow-tests=true -Dfuzz-tests=true -Dman=true "${MESON_ARGS[@]}" build
             ninja -C build -v
+	    curl -v https://coveralls.io
             meson test -C build --print-errorlogs
+	    curl -v https://coveralls.io
             if [[ "$phase" = "RUN_GCC" ]]; then
                 ninja -C build coverage
             fi
