@@ -50,7 +50,7 @@ for phase in "${PHASES[@]}"; do
                 MESON_ARGS+=(-Db_coverage=true)
                 (set +x; while :; do echo -ne "\n[WATCHDOG] $(date)\n"; sleep 30; done) &
             fi
-            meson --werror -Dslow-tests=true -Dman=true "${MESON_ARGS[@]}" build
+            meson --werror -Dman=true "${MESON_ARGS[@]}" build
             ninja -C build -v
 	    curl -v https://coveralls.io
             meson test -C build --print-errorlogs
