@@ -29,3 +29,12 @@ jobs:
           path-to-lcov: ./build/meson-logs/coverage.info
           parallel: true
           flag-name: run-${{ matrix.run_phase }}
+  finish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Coveralls Finished
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel-finished: true
