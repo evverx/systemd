@@ -3575,7 +3575,7 @@ foreach tuple : fuzzers
                 build_by_default : fuzzer_build)
         fuzzer_exes += exe
 
-        if want_tests != 'false'
+        if want_tests != 'false' and fuzz_tests
                 # Run the fuzz regression tests without any sanitizers enabled.
                 # Additional invocations with sanitizers may be added below.
                 foreach p : fuzz_regression_tests
