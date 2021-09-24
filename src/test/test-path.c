@@ -386,6 +386,8 @@ int main(int argc, char *argv[]) {
         _cleanup_free_ char *test_path = NULL;
         _cleanup_(rm_rf_physical_and_freep) char *runtime_dir = NULL;
 
+        exit(77);
+
         umask(022);
 
         test_setup_logging(LOG_INFO);
