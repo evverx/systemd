@@ -126,6 +126,7 @@ _upload()
 
     # Upload results
     echo -e "\033[33;1mUploading Coverity Scan Analysis results...\033[0m"
+    exit 0
     response=$(curl \
 	           --silent --write-out "\n%{http_code}\n" \
 	           --form project=$COVERITY_SCAN_PROJECT_NAME \

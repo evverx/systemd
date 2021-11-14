@@ -3,6 +3,7 @@
 
 # Download and extract coverity tool
 
+set -x
 set -e
 set -o pipefail
 
