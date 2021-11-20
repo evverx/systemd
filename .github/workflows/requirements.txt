@@ -1,0 +1,4 @@
+meson==0.60.0 \
+    --hash=sha256:40cc2426b482c8b0d7931a2ed69aaf85caf1ae7653d0435e82e39c5867cfa28c
+ninja==1.10.2.1 \
+    --hash=sha256:0a63a88e9ae2edda04ec93e8a75c4f1f1ccab6ec2c2219e36a1908b48eba8546
