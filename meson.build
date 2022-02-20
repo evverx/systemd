@@ -3849,7 +3849,8 @@ foreach exec : public_programs
                 test('check-help-' + name,
                      check_help,
                      args : exec.full_path(),
-                     depends: exec)
+                     depends: exec,
+                     suite: 'check-help')
         endif
 endforeach
 
