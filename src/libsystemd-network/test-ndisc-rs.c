@@ -266,8 +266,8 @@ static void test_callback(sd_ndisc *nd, sd_ndisc_event_t event, sd_ndisc_router 
 }
 
 static void test_rs(void) {
-        sd_event *e;
-        sd_ndisc *nd;
+        _cleanup_(sd_event_unrefp) sd_event *e = NULL;
+        _cleanup_(sd_ndisc_unrefp) sd_ndisc *nd = NULL;
 
         if (verbose)
                 printf("* %s\n", __func__);
@@ -301,12 +301,9 @@ static void test_rs(void) {
 
         test_hangcheck = sd_event_source_unref(test_hangcheck);
 
-        nd = sd_ndisc_unref(nd);
-        assert_se(!nd);
+        assert_se(sd_ndisc_stop(nd) >= 0);
 
         close(test_fd[1]);
-
-        sd_event_unref(e);
 }
 
 static int test_timeout_value(uint8_t flags) {
@@ -359,8 +356,8 @@ static int test_timeout_value(uint8_t flags) {
 }
 
 static void test_timeout(void) {
-        sd_event *e;
-        sd_ndisc *nd;
+        _cleanup_(sd_event_unrefp) sd_event *e = NULL;
+        _cleanup_(sd_ndisc_unrefp) sd_ndisc *nd = NULL;
 
         if (verbose)
                 printf("* %s\n", __func__);
@@ -390,9 +387,9 @@ static void test_timeout(void) {
 
         test_hangcheck = sd_event_source_unref(test_hangcheck);
 
-        nd = sd_ndisc_unref(nd);
+        assert_se(sd_ndisc_stop(nd) >= 0);
 
-        sd_event_unref(e);
+        close(test_fd[1]);
 }
 
 int main(int argc, char *argv[]) {
