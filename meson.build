@@ -3831,7 +3831,7 @@ meson.add_install_script('sh', '-c', 'touch $DESTDIR@0@'.format(prefixdir))
 # as it might be fragile due to changes in the tooling, and it is
 # not generally useful for users.
 jekyll = find_program('jekyll', required : false)
-if get_option('mode') == 'developer' and want_tests != 'false' and jekyll.found()
+if get_option('mode') == 'developer' and want_tests != 'false' and jekyll.found() and get_option('valgrind') == false
         test('github-pages',
              jekyll,
              args : ['build',
