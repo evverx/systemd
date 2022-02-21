@@ -99,7 +99,8 @@ for phase in "${PHASES[@]}"; do
             ;;
         RUN_VALGRIND)
             run_meson -Dvalgrind=true --fatal-meson-warnings -Dnobody-group=nogroup --werror -Dtests=unsafe build
-            meson test -C build -v --wrap='valgrind --track-fds=yes --child-silent-after-fork=yes' -t 5 --print-errorlogs --no-suite check-compilation --no-suite check-help
+            ninja -C build -v
+            meson test -C build -v --wrap='valgrind --track-fds=yes --child-silent-after-fork=yes --track-origins=yes' -t 5 --print-errorlogs --no-suite check-compilation --no-suite check-help
             # TODO: look for tests where there are more than 3 fds at exit
             ;;
         CLEANUP)
