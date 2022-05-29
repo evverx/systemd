@@ -23,7 +23,7 @@ on:
 jobs:
   Fuzzing:
     runs-on: ubuntu-latest
-    if: github.repository == 'systemd/systemd'
+    if: github.repository == 'evverx/systemd'
     concurrency:
       group: ${{ github.workflow }}-${{ matrix.sanitizer }}-${{ github.ref }}
       cancel-in-progress: true
@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Build Fuzzers (${{ matrix.sanitizer }})
         id: build
-        uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+        uses: evverx/oss-fuzz/infra/cifuzz/actions/build_fuzzers@cifuzz-i386
         with:
           oss-fuzz-project-name: 'systemd'
           dry-run: false
@@ -43,7 +43,7 @@ jobs:
           keep-unaffected-fuzz-targets: true
           sanitizer: ${{ matrix.sanitizer }}
       - name: Run Fuzzers (${{ matrix.sanitizer }})
-        uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+        uses: evverx/oss-fuzz/infra/cifuzz/actions/run_fuzzers@cifuzz-i386
         with:
           oss-fuzz-project-name: 'systemd'
           fuzz-seconds: 600
