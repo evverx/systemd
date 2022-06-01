@@ -96,12 +96,12 @@ static EFI_STATUS pack_cpio_one(
                 return EFI_OUT_OF_RESOURCES;
 
         /* Align the whole header to 4 byte size */
-        l = ALIGN4(l);
+        l = ALIGN_TO(l, 4);
         if (l == UINTN_MAX) /* overflow check */
                 return EFI_OUT_OF_RESOURCES;
 
         /* Align the contents to 4 byte size */
-        q = ALIGN4(contents_size);
+        q = ALIGN_TO(contents_size, 4);
         if (q == UINTN_MAX) /* overflow check */
                 return EFI_OUT_OF_RESOURCES;
 
@@ -188,7 +188,7 @@ static EFI_STATUS pack_cpio_dir(
         l += path_size;
 
         /* Align the whole header to 4 byte size */
-        l = ALIGN4(l);
+        l = ALIGN_TO(l, 4);
         if (l == UINTN_MAX) /* overflow check */
                 return EFI_OUT_OF_RESOURCES;
 
