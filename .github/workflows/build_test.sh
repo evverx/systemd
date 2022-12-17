@@ -155,6 +155,8 @@ for args in "${ARGS[@]}"; do
         fatal "'meson compile' failed with $args"
     fi
 
+    meson test -C build --print-errorlogs
+
     for loader in build/src/boot/efi/*.efi; do
         if sbverify --list "$loader" |& grep -q "gap in section table"; then
             fatal "$loader: Gaps found in section table"
