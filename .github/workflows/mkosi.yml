@@ -76,7 +76,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-    - uses: systemd/mkosi@b1a570550ee077ed7a9a9359e4732636034807e6
+    - uses: systemd/mkosi@f126e73ad03f1f1a1dd75ffb29fa1c3206b89535
 
     - name: Configure
       run: |
