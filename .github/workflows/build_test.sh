@@ -84,14 +84,6 @@ if [[ "$COMPILER" == clang ]]; then
     CXX="clang++-$COMPILER_VERSION"
     AR="llvm-ar-$COMPILER_VERSION"
 
-    if systemd-analyze compare-versions "$COMPILER_VERSION" ge 17; then
-        CFLAGS="-fno-sanitize=function"
-        CXXFLAGS="-fno-sanitize=function"
-    else
-        CFLAGS=""
-        CXXFLAGS=""
-    fi
-
     # Prefer the distro version if available
     if ! apt-get -y install --dry-run "llvm-$COMPILER_VERSION" >/dev/null; then
         # Latest LLVM stack deb packages provided by https://apt.llvm.org/
@@ -107,8 +99,6 @@ elif [[ "$COMPILER" == gcc ]]; then
     CC="gcc-$COMPILER_VERSION"
     CXX="g++-$COMPILER_VERSION"
     AR="gcc-ar-$COMPILER_VERSION"
-    CFLAGS=""
-    CXXFLAGS=""
 
     if ! apt-get -y install --dry-run "gcc-$COMPILER_VERSION" >/dev/null; then
         # Latest gcc stack deb packages provided by
@@ -152,8 +142,8 @@ for args in "${ARGS[@]}"; do
     info "Checking build with $args"
     # shellcheck disable=SC2086
     if ! AR="$AR" \
-         CC="$CC" CC_LD="$LINKER" CFLAGS="$CFLAGS" \
-         CXX="$CXX" CXX_LD="$LINKER" CXXFLAGS="$CXXFLAGS" \
+         CC="$CC" CC_LD="$LINKER" CFLAGS="-Werror" \
+         CXX="$CXX" CXX_LD="$LINKER" CXXFLAGS="-Werror" \
          meson setup \
                -Dtests=unsafe -Dslow-tests=true -Dfuzz-tests=true --werror \
                -Dnobody-group=nogroup -Dcryptolib="${CRYPTOLIB:?}" -Ddebug=false \
