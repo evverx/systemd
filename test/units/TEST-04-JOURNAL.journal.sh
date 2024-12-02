@@ -21,6 +21,9 @@ journalctl --rotate --vacuum-size=8M
 # Reset the ratelimit buckets for the subsequent tests below.
 systemctl restart systemd-journald
 
+systemctl kill --signal ABRT systemd-journald
+sleep 10
+
 # Test stdout stream
 write_and_match() {
     local input="${1:?}"
