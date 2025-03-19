@@ -496,6 +496,7 @@ static int builtin_blkid(UdevEvent *event, int argc, char *argv[]) {
         if (is_gpt)
                 find_gpt_root(event, pr, backing_fname);
 
+        blkid_free_probe(pr);
         return 0;
 }
 
