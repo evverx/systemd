@@ -191,6 +191,7 @@ jobs:
             meson setup \
             --buildtype=debugoptimized \
             -Dbpf-framework=disabled \
+            -Ddebug-extra=hashmap \
             build
 
       - name: Build image
