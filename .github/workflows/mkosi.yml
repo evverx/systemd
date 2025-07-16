@@ -66,16 +66,6 @@ jobs:
             no_kvm: 0
           - distro: debian
             release: testing
-            runner: ubuntu-24.04
-            sanitizers: ""
-            llvm: 0
-            cflags: "-Og"
-            relabel: no
-            vm: 0
-            no_qemu: 0
-            no_kvm: 0
-          - distro: debian
-            release: testing
             runner: ubuntu-24.04-arm
             sanitizers: ""
             llvm: 0
@@ -94,13 +84,13 @@ jobs:
             vm: 0
             no_qemu: 0
             no_kvm: 0
-          - distro: fedora
-            release: "42"
+          - distro: debian
+            release: testing
             runner: ubuntu-24.04
             sanitizers: address,undefined
-            llvm: 1
+            llvm: 0
             cflags: "-Og"
-            relabel: yes
+            relabel: no
             vm: 0
             no_qemu: 0
             no_kvm: 0
