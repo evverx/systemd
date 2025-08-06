@@ -366,10 +366,7 @@ void manager_process_syslog_message(
 
         leading_ws = strspn(buf, WHITESPACE);
 
-        if (i == 0)
-                /* The message contains only whitespaces */
-                msg = buf + raw_len;
-        else if (i == raw_len)
+        if (i == raw_len)
                 /* Nice! No need to strip anything on the end, let's optimize this a bit */
                 msg = buf + leading_ws;
         else {
