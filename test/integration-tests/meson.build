@@ -34,6 +34,7 @@ integration_test_template = {
 }
 
 foreach dirname : [
+        'TEST-04-JOURNAL',
         'TEST-07-PID1',
 ]
         subdir(dirname)
