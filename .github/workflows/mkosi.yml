@@ -105,7 +105,7 @@ jobs:
             llvm: 1
             cflags: "-Og"
             relabel: yes
-            vm: 0
+            vm: 1
             no_qemu: 0
             no_kvm: 0
             shim: 0
@@ -208,6 +208,7 @@ jobs:
                   MESON_OPTIONS=--werror
                   LLVM=${{ matrix.llvm }}
                   SYSEXT=1
+                  MESON_VERBOSE=1
 
           [Content]
           SELinuxRelabel=${{ matrix.relabel }}
