@@ -6,6 +6,7 @@ set -o pipefail
 # shellcheck source=test/units/test-control.sh
 . "$(dirname "$0")"/test-control.sh
 
+printf ' ' | ncat -uU /run/systemd/journal/dev-log
 run_subtests
 
 touch /testok
