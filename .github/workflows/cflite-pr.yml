@@ -25,13 +25,13 @@ jobs:
     steps:
     - name: Build Fuzzers
       id: build
-      uses: google/clusterfuzzlite/actions/build_fuzzers@v1
+      uses: evverx/clusterfuzzlite/actions/build_fuzzers@main
       with:
         sanitizer: ${{ matrix.sanitizer }}
         github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Run Fuzzers
       id: run
-      uses: google/clusterfuzzlite/actions/run_fuzzers@v1
+      uses: evverx/clusterfuzzlite/actions/run_fuzzers@main
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         fuzz-seconds: 1200
